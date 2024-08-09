@@ -1,28 +1,40 @@
-import scipy.io as sio
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
+from scipy.io import loadmat
+from scipy.ndimage import gaussian_filter
 
-# 设置要检查的.mat文件路径
-mat_file_path = '/path/to/output_folder/GT_filename.mat'  # 替换为您的.mat文件路径
+# 載入 .mat 檔案
+def load_mat_file(file_path):
+    return loadmat(file_path)
 
-# 加载.mat文件
-mat_data = sio.loadmat(mat_file_path)
+# 提取座標數據
+def extract_locations(data):
+    return data['image_info'][0,0][0,0][0]
 
-# 从.mat文件中提取密度图信息
-image_info = mat_data['image_info']
-locations = image_info['location'][0, 0]
-counts = image_info['number'][0, 0]
+# 生成密度圖
+def generate_density_map(locations, image_shape=(768, 1024), sigma=10):
+    density_map = np.zeros(image_shape)
+    for location in locations:
+        x, y = int(location[0]), int(location[1])
+        if x < image_shape[1] and y < image_shape[0]:
+            density_map[y, x] += 1
+    return gaussian_filter(density_map, sigma=sigma)
 
-# 创建空白图像，用于显示密度图
-image_shape = (1024, 1024)  # 根据实际图像大小设置，或者从.mat文件中读取
-density_map = np.zeros(image_shape, dtype=np.float32)
+# 繪製密度圖
+def plot_density_map(density_map):
+    plt.figure(figsize=(10, 8))
+    plt.imshow(density_map, cmap='jet', interpolation='nearest')
+    plt.colorbar()
+    plt.title('Density Map')
+    plt.xlabel('X coordinate')
+    plt.ylabel('Y coordinate')
+    plt.grid(False)
+    plt.show()
 
-# 将点和计数值绘制到图像上
-for (y, x), count in zip(locations, counts):
-    density_map[int(y), int(x)] = count
-
-# 显示密度图
-plt.imshow(density_map, cmap='hot')
-plt.colorbar()
-plt.title('Density Map')
-plt.show()
+# 主程式
+if __name__ == '__main__':
+    file_path = 'D:\Github\MaskToDensity\GT_IMG_1.mat'  # 修改此處為您的檔案路徑
+    mat_data = load_mat_file(file_path)
+    locations = extract_locations(mat_data)
+    density_map = generate_density_map(locations)
+    plot_density_map(density_map)
