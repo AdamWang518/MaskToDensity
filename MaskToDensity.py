@@ -1,55 +1,43 @@
 import os
 import json
 import numpy as np
-import cv2
 from scipy.io import savemat
+from PIL import Image, ImageDraw
 
-# 设置输入和输出文件夹路径
-input_folder = '/path/to/json_folder'  # 替换为包含JSON文件的文件夹路径
-output_folder = '/path/to/output_folder'  # 替换为保存.mat文件的文件夹路径
+def convert_json_to_mat(json_folder, mat_folder, image_size):
+    if not os.path.exists(mat_folder):
+        os.makedirs(mat_folder)
 
-# 确保输出文件夹存在
-os.makedirs(output_folder, exist_ok=True)
+    for json_file in os.listdir(json_folder):
+        if json_file.endswith(".json"):
+            json_path = os.path.join(json_folder, json_file)
+            with open(json_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            # 创建一个空的二值图像，用于保存遮罩
+            mask = Image.new('L', (image_size[0], image_size[1]), 0)
+            draw = ImageDraw.Draw(mask)
 
-# 遍历输入文件夹中的所有JSON文件
-for filename in os.listdir(input_folder):
-    if filename.endswith('.json'):
-        json_path = os.path.join(input_folder, filename)
-        
-        # 读取JSON文件
-        with open(json_path) as f:
-            labelme_data = json.load(f)
-        
-        # 自动设置图像大小
-        image_height = labelme_data.get('imageHeight', 1024)  # 默认值1024，如果没有该字段
-        image_width = labelme_data.get('imageWidth', 1024)    # 默认值1024，如果没有该字段
-        image_shape = (image_height, image_width)
+            for shape in data['shapes']:
+                if shape['shape_type'] == 'polygon':
+                    polygon = [tuple(point) for point in shape['points']]
+                    draw.polygon(polygon, outline=1, fill=1)
 
-        # 创建空的遮罩图像
-        mask = np.zeros(image_shape, dtype=np.uint8)
+            # 将遮罩转换为numpy数组
+            mask_np = np.array(mask)
 
-        # 遍历所有多边形并填充遮罩
-        for shape in labelme_data['shapes']:
-            polygon_points = np.array(shape['points'], dtype=np.int32)
-            cv2.fillPoly(mask, [polygon_points], color=255)
+            # 创建符合你提供的结构的数据
+            image_info = np.array([[(mask_np, np.array([[234]], dtype=np.uint8))]], dtype=[('location', 'O'), ('number', 'O')])
 
-        # 生成密度图
-        density_map = cv2.GaussianBlur(mask, (15, 15), sigmaX=4, sigmaY=4)
+            # 保存为.mat文件
+            mat_file_name = 'GT_'+os.path.splitext(json_file)[0] + '.mat'
+            mat_path = os.path.join(mat_folder, mat_file_name)
+            savemat(mat_path, {'image_info': image_info})
 
-        # 提取所有非零点的坐标
-        locations = np.column_stack(np.where(density_map > 0))
+            print(f"{mat_file_name} 已保存.")
 
-        # 对于每个点，指定一个计数值（例如，每个点对应一个“人”）
-        counts = density_map[density_map > 0]
+json_folder = "D:\\Github\\MaskToDensity\\"  # 替换为你的json文件夹路径
+mat_folder = "D:\\Github\\MaskToDensity\\"  # 替换为你想保存mat文件的路径
+image_size = (1920, 1080)  # 替换为你的图像尺寸
 
-        # 构建 image_info 结构
-        image_info_struct = np.array([(locations, counts)], dtype=[('location', 'O'), ('number', 'O')])
-
-        # 生成输出文件名
-        output_filename = 'GT_' + os.path.splitext(filename)[0] + '.mat'
-        output_path = os.path.join(output_folder, output_filename)
-
-        # 保存为.mat文件
-        savemat(output_path, {'image_info': image_info_struct})
-
-        print(f'Converted {filename} to {output_filename}')
+convert_json_to_mat(json_folder, mat_folder, image_size)

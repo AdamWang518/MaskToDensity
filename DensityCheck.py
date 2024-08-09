@@ -9,7 +9,10 @@ def load_mat_file(file_path):
 
 # 提取座標數據
 def extract_locations(data):
-    return data['image_info'][0,0][0,0][0]
+    # 正确地提取 image_info 的 location 字段
+    image_info = data['image_info'][0, 0]
+    locations = image_info['location'][0, 0]
+    return locations
 
 # 生成密度圖
 def generate_density_map(locations, image_shape=(768, 1024), sigma=10):
@@ -33,8 +36,9 @@ def plot_density_map(density_map):
 
 # 主程式
 if __name__ == '__main__':
-    file_path = 'D:\Github\MaskToDensity\GT_IMG_1.mat'  # 修改此處為您的檔案路徑
+    file_path = 'D:\\Github\\MaskToDensity\\GT_241.mat'  # 修改此處為您的檔案路徑
     mat_data = load_mat_file(file_path)
     locations = extract_locations(mat_data)
+    print("Extracted locations:", locations)  # 添加调试信息，查看提取的数据
     density_map = generate_density_map(locations)
     plot_density_map(density_map)
