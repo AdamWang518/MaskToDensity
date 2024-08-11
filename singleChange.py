@@ -22,7 +22,7 @@ structured_data = np.array([structured_array], dtype=[('location', 'O'), ('numbe
 final_structure = np.array([[structured_data]])
 
 # 保存到.mat檔案
-output_mat_file = 'output_file_path.mat'
+output_mat_file = 'test.mat'
 savemat(output_mat_file, {
     'image_info': final_structure
 })

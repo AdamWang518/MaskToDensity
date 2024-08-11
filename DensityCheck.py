@@ -15,8 +15,9 @@ def extract_locations(data):
     return locations
 
 # 生成密度圖
-def generate_density_map(locations, image_shape=(768, 1024), sigma=10):
+def generate_density_map(locations, image_shape=(1920, 1920), sigma=10):
     density_map = np.zeros(image_shape)
+    # print("Extracted locations:", locations)
     for location in locations:
         x, y = int(location[0]), int(location[1])
         if x < image_shape[1] and y < image_shape[0]:
@@ -36,7 +37,7 @@ def plot_density_map(density_map):
 
 # 主程式
 if __name__ == '__main__':
-    file_path = 'D:\\Github\\MaskToDensity\\GT_241.mat'  # 修改此處為您的檔案路徑
+    file_path = 'D:\\Github\\MaskToDensity\\GT_video_3_frame_1.mat'  # 修改此處為您的檔案路徑
     mat_data = load_mat_file(file_path)
     locations = extract_locations(mat_data)
     print("Extracted locations:", locations)  # 添加调试信息，查看提取的数据

@@ -17,8 +17,8 @@ def print_dict(d, indent=0):
             print('    ' * (indent + 1) + f"Value: {value}")
 
 # 设置要检查的.mat文件路径
-# mat_file_path = 'D:\\Github\\MaskToDensity\\GT_IMG_1.mat'  # 替换为您的.mat文件路径
-mat_file_path = 'D:\\Github\\MaskToDensity\\GT_video_1_frame_1.mat'  # 替换为您的.mat文件路径
+# mat_file_path = 'D:\\Github\\MaskToDensity\\video_1_frame_1.mat'  # 替换为您的.mat文件路径
+mat_file_path = 'D:\\Github\\MaskToDensity\\GT_video_3_frame_1.mat'  # 替换为您的.mat文件路径
 # 加载.mat文件
 mat_data = sio.loadmat(mat_file_path)
 
